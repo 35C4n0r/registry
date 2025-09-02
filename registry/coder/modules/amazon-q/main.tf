@@ -37,11 +37,28 @@ variable "icon" {
   default     = "/icon/amazon-q.svg"
 }
 
-
-variable "install_amazon_q" {
+variable "report_tasks" {
   type        = bool
-  description = "Whether to install Amazon Q."
+  description = "Whether to enable task reporting to Coder UI via AgentAPI"
   default     = true
+}
+
+variable "cli_app" {
+  type        = bool
+  description = "Whether to create a CLI app for Amazon Q"
+  default     = false
+}
+
+variable "web_app_display_name" {
+  type        = string
+  description = "Display name for the web app"
+  default     = "AmazonQ"
+}
+
+variable "cli_app_display_name" {
+  type        = string
+  description = "Display name for the CLI app"
+  default     = "AmazonQ CLI"
 }
 
 variable "install_agentapi" {
@@ -50,10 +67,42 @@ variable "install_agentapi" {
   default     = true
 }
 
+variable "ai_prompt" {
+  type        = string
+  description = "The initial task prompt to send to Amazon Q."
+  default     = ""
+}
+
+variable "pre_install_script" {
+  type        = string
+  description = "Optional script to run before installing Amazon Q."
+  default     = null
+}
+
+variable "post_install_script" {
+  type        = string
+  description = "Optional script to run after installing Amazon Q."
+  default     = null
+}
+
 variable "agentapi_version" {
   type        = string
   description = "The version of AgentAPI to install."
-  default     = "v0.6.0"
+  default     = "v0.6.1"
+}
+
+variable "workdir" {
+  type        = string
+  description = "The folder to run Amazon Q in."
+  default     = "/home/coder"
+}
+
+# ---------------------------------------------
+
+variable "install_amazon_q" {
+  type        = bool
+  description = "Whether to install Amazon Q."
+  default     = true
 }
 
 variable "amazon_q_version" {
@@ -72,12 +121,6 @@ variable "trust_all_tools" {
   type        = bool
   description = "Whether to trust all tools in Amazon Q."
   default     = false
-}
-
-variable "ai_prompt" {
-  type        = string
-  description = "The initial task prompt to send to Amazon Q."
-  default     = ""
 }
 
 variable "system_prompt" {
@@ -119,22 +162,16 @@ variable "auth_tarball" {
   sensitive   = true
 }
 
-variable "pre_install_script" {
-  type        = string
-  description = "Optional script to run before installing Amazon Q."
-  default     = null
-}
-
-variable "post_install_script" {
-  type        = string
-  description = "Optional script to run after installing Amazon Q."
-  default     = null
-}
-
 variable "agent_config" {
   type        = string
   description = "Optional Agent configuration JSON for Amazon Q."
   default     = null
+}
+
+variable "agentapi_chat_based_path" {
+  type        = bool
+  description = "Whether to use chat-based path for AgentAPI.Required if CODER_WILDCARD_ACCESS_URL is not defined in coder deployment"
+  default     = true
 }
 
 # Expose status slug to the agent environment
@@ -156,7 +193,7 @@ locals {
   app_slug               = "amazonq"
   install_script         = file("${path.module}/scripts/install.sh")
   start_script           = file("${path.module}/scripts/start.sh")
-  module_dir_name        = ".amazonq"
+  module_dir_name        = ".amazonq-module"
   system_prompt          = jsonencode(replace(var.system_prompt, "/[\r\n]/", ""))
   coder_mcp_instructions = jsonencode(replace(var.coder_mcp_instructions, "/[\r\n]/", ""))
 
@@ -165,10 +202,6 @@ locals {
     system_prompt = local.system_prompt
   })
 
-  # Use either custom agent config OR default, not merged
-  # Check if custom config is provided and valid
-  has_custom_config = var.agent_config != null && var.agent_config != ""
-
   # Choose the JSON string: use var.agent_config if provided, otherwise encode default
   agent_config = var.agent_config != null ? var.agent_config : local.default_agent_config
 
@@ -176,6 +209,8 @@ locals {
   agent_name = try(jsondecode(local.agent_config).name, "agent")
 
   full_prompt = var.ai_prompt != null ? "${var.ai_prompt}" : ""
+
+  server_chat_parameters = var.agentapi_chat_based_path ? "--chat-base-path /@${data.coder_workspace_owner.me.name}/${data.coder_workspace.me.name}.${var.agent_id}/apps/${local.app_slug}/chat" : ""
 }
 
 
@@ -188,9 +223,10 @@ module "agentapi" {
   web_app_order        = var.order
   web_app_group        = var.group
   web_app_icon         = var.icon
-  web_app_display_name = "Amazon Q"
-  cli_app_slug         = local.app_slug
-  cli_app_display_name = "Amazon Q"
+  web_app_display_name = var.web_app_display_name
+  cli_app              = var.cli_app
+  cli_app_slug         = var.cli_app ? "${local.app_slug}-cli" : null
+  cli_app_display_name = var.cli_app ? var.cli_app_display_name : null
   module_dir_name      = local.module_dir_name
   install_agentapi     = var.install_agentapi
   agentapi_version     = var.agentapi_version
@@ -207,7 +243,9 @@ module "agentapi" {
     ARG_TRUST_ALL_TOOLS='${var.trust_all_tools}' \
     ARG_AI_PROMPT='${base64encode(local.full_prompt)}' \
     ARG_MODULE_DIR_NAME='${local.module_dir_name}' \
-    ARG_SERVER_PARAMETERS="-c /@${data.coder_workspace_owner.me.name}/${data.coder_workspace.me.name}.${var.agent_id}/apps/${local.app_slug}/chat" \
+    ARG_WORKDIR='${var.workdir}' \
+    ARG_SERVER_PARAMETERS="${local.server_chat_parameters}" \
+    ARG_REPORT_TASKS='${var.report_tasks}' \
     /tmp/start.sh
   EOT
 
@@ -227,8 +265,7 @@ module "agentapi" {
     ARG_MODULE_DIR_NAME='${local.module_dir_name}' \
     ARG_CODER_MCP_APP_STATUS_SLUG='${local.app_slug}' \
     ARG_CODER_MCP_INSTRUCTIONS='${base64encode(local.coder_mcp_instructions)}' \
-    ARG_PRE_INSTALL_SCRIPT='${var.pre_install_script != null ? base64encode(var.pre_install_script) : ""}' \
-    ARG_POST_INSTALL_SCRIPT='${var.post_install_script != null ? base64encode(var.post_install_script) : ""}' \
+    ARG_REPORT_TASKS='${var.report_tasks}' \
     /tmp/install.sh
   EOT
 }
