@@ -198,8 +198,8 @@ module "amazon-q" {
 | `cli_app`                  | `bool`   | `false`                                               | Whether to create a CLI app for Amazon Q                                                                                       |
 | `web_app_display_name`     | `string` | `"AmazonQ"`                                           | Display name for the web app                                                                                                   |
 | `cli_app_display_name`     | `string` | `"AmazonQ CLI"`                                       | Display name for the CLI app                                                                                                   |
-| `workdir`                  | `string` | `"/home/coder"`                                       | The folder to run Amazon Q in                                                                                                  |
-| `agentapi_chat_based_path` | `bool`   | `true`                                                | Whether to use chat-based path for AgentAPI. Required if CODER_WILDCARD_ACCESS_URL is not defined in coder deployment          |
+| `workdir`                  | `string` | **Required**                                          | The folder to run Amazon Q in                                                                                                  |
+| `agentapi_chat_based_path` | `bool`   | `false`                                               | Whether to use chat-based path for AgentAPI. Required if CODER_WILDCARD_ACCESS_URL is not defined in coder deployment          |
 
 ### UI Configuration
 
