@@ -26,10 +26,12 @@ const baseAgentConfig = JSON.stringify({
 const requiredVars = {
   agent_id: "dummy-agent-id",
   agent_config: baseAgentConfig,
+  workdir: "/tmp/test-workdir",
 };
 
 const fullConfigVars = {
   agent_id: "dummy-agent-id",
+  workdir: "/tmp/test-workdir",
   install_amazon_q: true,
   install_agentapi: true,
   agentapi_version: "v0.6.0",
@@ -54,6 +56,7 @@ describe("amazon-q module v2.0.0", async () => {
   it("Test Case 1: Basic Usage - No Autonomous Use of Q", async () => {
     const basicUsageVars = {
       agent_id: "dummy-agent-id",
+      workdir: "/tmp/test-workdir",
       auth_tarball: "dGVzdEF1dGhUYXJiYWxs", // base64 "testAuthTarball"
     };
 
@@ -89,6 +92,7 @@ describe("amazon-q module v2.0.0", async () => {
   it("Test Case 2: Autonomous Usage - Autonomous Use of Q", async () => {
     const autonomousUsageVars = {
       agent_id: "dummy-agent-id",
+      workdir: "/tmp/test-workdir",
       auth_tarball: "dGVzdEF1dGhUYXJiYWxs", // base64 "testAuthTarball"
       ai_prompt:
         "Help me set up a Python FastAPI project with proper testing structure",
@@ -126,6 +130,7 @@ describe("amazon-q module v2.0.0", async () => {
   it("Test Case 3: Extended Configuration - Parameter Validation and File Rendering", async () => {
     const extendedConfigVars = {
       agent_id: "dummy-agent-id",
+      workdir: "/tmp/test-workdir",
       auth_tarball: "dGVzdEF1dGhUYXJiYWxs", // base64 "testAuthTarball"
       amazon_q_version: "1.14.1",
       q_install_url: "https://desktop-release.q.us-east-1.amazonaws.com",

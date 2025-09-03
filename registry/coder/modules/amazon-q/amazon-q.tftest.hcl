@@ -3,6 +3,7 @@ run "required_variables" {
 
   variables {
     agent_id = "test-agent-id"
+    workdir  = "/tmp/test-workdir"
   }
 }
 
@@ -11,6 +12,7 @@ run "minimal_config" {
 
   variables {
     agent_id     = "test-agent-id"
+    workdir      = "/tmp/test-workdir"
     auth_tarball = "dGVzdA==" # base64 "test"
   }
 
@@ -32,6 +34,7 @@ run "test_case_1_basic_usage" {
 
   variables {
     agent_id     = "test-agent-id"
+    workdir      = "/tmp/test-workdir"
     auth_tarball = "dGVzdEF1dGhUYXJiYWxs" # base64 "testAuthTarball"
   }
 
@@ -72,6 +75,7 @@ run "test_case_2_autonomous_usage" {
 
   variables {
     agent_id     = "test-agent-id"
+    workdir      = "/tmp/test-workdir"
     auth_tarball = "dGVzdEF1dGhUYXJiYWxs" # base64 "testAuthTarball"
     ai_prompt    = "Help me set up a Python FastAPI project with proper testing structure"
   }
@@ -119,6 +123,7 @@ run "test_case_3_extended_configuration" {
 
   variables {
     agent_id            = "test-agent-id"
+    workdir             = "/tmp/test-workdir"
     auth_tarball        = "dGVzdEF1dGhUYXJiYWxs" # base64 "testAuthTarball"
     amazon_q_version    = "1.14.1"
     q_install_url       = "https://desktop-release.q.us-east-1.amazonaws.com"
@@ -185,6 +190,7 @@ run "full_config" {
 
   variables {
     agent_id            = "test-agent-id"
+    workdir             = "/tmp/test-workdir"
     install_amazon_q    = true
     install_agentapi    = true
     agentapi_version    = "v0.5.0"
@@ -233,6 +239,7 @@ run "auth_tarball_environment" {
 
   variables {
     agent_id     = "test-agent-id"
+    workdir      = "/tmp/test-workdir"
     auth_tarball = "dGVzdEF1dGhUYXJiYWxs" # base64 "testAuthTarball"
   }
 
@@ -252,6 +259,7 @@ run "empty_auth_tarball" {
 
   variables {
     agent_id     = "test-agent-id"
+    workdir      = "/tmp/test-workdir"
     auth_tarball = ""
   }
 
@@ -266,6 +274,7 @@ run "custom_system_prompt" {
 
   variables {
     agent_id      = "test-agent-id"
+    workdir       = "/tmp/test-workdir"
     system_prompt = "Custom system prompt for testing"
   }
 
@@ -281,6 +290,7 @@ run "install_options" {
 
   variables {
     agent_id         = "test-agent-id"
+    workdir          = "/tmp/test-workdir"
     install_amazon_q = false
     install_agentapi = false
   }
@@ -296,6 +306,7 @@ run "version_configuration" {
 
   variables {
     agent_id         = "test-agent-id"
+    workdir          = "/tmp/test-workdir"
     amazon_q_version = "2.15.0"
     agentapi_version = "v0.4.0"
   }
@@ -312,6 +323,7 @@ run "agent_name_extraction" {
 
   variables {
     agent_id = "test-agent-id"
+    workdir  = "/tmp/test-workdir"
     agent_config = jsonencode({
       name             = "custom-enterprise-agent"
       description      = "Custom enterprise agent configuration"
@@ -344,6 +356,7 @@ run "json_encoding_validation" {
 
   variables {
     agent_id      = "test-agent-id"
+    workdir       = "/tmp/test-workdir"
     system_prompt = "Multi-line\nsystem prompt\nwith newlines"
   }
 
