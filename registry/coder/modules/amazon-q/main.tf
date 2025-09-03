@@ -171,7 +171,7 @@ variable "agent_config" {
 variable "agentapi_chat_based_path" {
   type        = bool
   description = "Whether to use chat-based path for AgentAPI.Required if CODER_WILDCARD_ACCESS_URL is not defined in coder deployment"
-  default     = true
+  default     = false
 }
 
 # Expose status slug to the agent environment
