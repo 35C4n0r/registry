@@ -17,70 +17,24 @@ module "amazon-q" {
   agent_id = coder_agent.example.id
 
   # Required: Authentication tarball (see below for generation)
-  auth_tarball = var.amazon_q_auth_tarball
+  auth_tarball = <<-EOF
+base64encoded-tarball
+EOF
 }
 ```
 
 ![Amazon-Q in action](../../.images/amazon-q-new.png)
 
-## Features
-
-- **🚀 Automatic Installation**: Downloads and installs Amazon Q CLI automatically
-- **🔐 Authentication**: Supports pre-authenticated tarball for seamless login
-- **📊 Task Reporting**: Built-in MCP integration for reporting progress to Coder
-- **🎯 AI Prompts**: Support for initial task prompts and custom system prompts
-- **🔧 Customization**: Pre/post install scripts for custom setup
-- **🌐 AgentAPI Integration**: Web and CLI app integration through AgentAPI
-- **🛠️ Tool Trust**: Configurable tool trust settings
-- **📁 Flexible Deployment**: Configurable working directory and module structure
-
-## Dependencies
-
-This module has critical dependencies on AgentAPI components for proper web integration and interactive functionality:
-
-### AgentAPI Coder Module
-
-- **Module**: `registry.coder.com/coder/agentapi/coder`
-- **Version**: `1.1.1` (hardcoded in module)
-- **Purpose**: Provides the Coder module infrastructure for AgentAPI integration
-- **Functionality**: Handles module lifecycle, configuration, and Coder-specific integration
-
-### AgentAPI Binary
-
-- **Binary Version**: `v0.6.1` (configurable via `agentapi_version` parameter)
-- **Installation**: Automatically downloaded and installed when `install_agentapi = true`
-- **Purpose**: The actual AgentAPI server binary that runs the web interface
-- **Functionality**: Provides the runtime server for web-based interactions
-
-**Why Both Components are Required:**
-
-- **Coder Module (1.1.1)**: Integrates AgentAPI into the Coder ecosystem and manages the module lifecycle
-- **AgentAPI Binary (v0.6.0)**: Provides the actual web interface and interactive functionality
-- **Web Interface**: Enables web-based chat interface accessible through Coder
-- **Session Management**: Handles interactive sessions and maintains state
-- **MCP Protocol**: Facilitates Model Context Protocol communication for task reporting
-- **Real-time Updates**: Enables live progress reporting through the `coder_report_task` tool
-
-**Version Compatibility:**
-
-- **Module Version**: Fixed at `1.1.1` for stability and compatibility
-- **Binary Version**: Configurable (default `v0.6.1`) to allow updates and customization
-- **Coder Integration**: Ensure your Coder deployment supports both component versions
-- **Upgrade Path**: Binary version can be updated via `agentapi_version` parameter
-
 ## Prerequisites
-
-### System Requirements
-
-The following tools must be pre-installed on the system where you generate the authentication tarball:
 
 - **zstd** - Required for compressing the authentication tarball
   - **Ubuntu/Debian**: `sudo apt-get install zstd`
   - **RHEL/CentOS/Fedora**: `sudo yum install zstd` or `sudo dnf install zstd`
   - **macOS**: `brew install zstd`
   - **Windows**: Download from [zstd releases](https://github.com/facebook/zstd/releases)
+- **auth_tarball** - Required if running tasks or agentapi.
 
-### Authentication Tarball (Required)
+### Authentication Tarball (Required for tasks)
 
 You must generate an authenticated Amazon Q tarball on another machine where you have successfully logged in:
 
@@ -171,44 +125,6 @@ module "amazon-q" {
 - The parameter value is passed to the Amazon Q module via the `ai_prompt` variable
 - Without this parameter, `coder_ai_task` resources will not function properly
 
-## Configuration Variables
-
-### Required Variables
-
-| Variable   | Type     | Description             |
-| ---------- | -------- | ----------------------- |
-| `agent_id` | `string` | The ID of a Coder agent |
-
-### Optional Variables
-
-| Variable                   | Type     | Default                                               | Description                                                                                                                    |
-| -------------------------- | -------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `auth_tarball`             | `string` | `""`                                                  | Base64 encoded, zstd compressed tarball of authenticated Amazon Q directory (sensitive)                                        |
-| `amazon_q_version`         | `string` | `"1.14.1"`                                            | Version of Amazon Q to install                                                                                                 |
-| `q_install_url`            | `string` | `"https://desktop-release.q.us-east-1.amazonaws.com"` | Base URL for Amazon Q installation downloads (supports air-gapped installations)                                               |
-| `install_amazon_q`         | `bool`   | `true`                                                | Whether to install Amazon Q CLI                                                                                                |
-| `install_agentapi`         | `bool`   | `true`                                                | Whether to install AgentAPI for web integration                                                                                |
-| `agentapi_version`         | `string` | `"v0.6.1"`                                            | Version of AgentAPI to install                                                                                                 |
-| `trust_all_tools`          | `bool`   | `false`                                               | Whether to trust all tools in Amazon Q (security consideration)                                                                |
-| `ai_prompt`                | `string` | `""`                                                  | Initial task prompt to send to Amazon Q (used for automated task execution)                                                    |
-| `system_prompt`            | `string` | _See below_                                           | System prompt that defines the agent's behavior and task reporting instructions                                                |
-| `coder_mcp_instructions`   | `string` | _See below_                                           | Specific instructions for Coder MCP server integration. Defines task reporting format and requirements                         |
-| `agent_config`             | `string` | `null`                                                | Custom agent configuration JSON. The "name" field is used as agent name and config filename. Supports full agent customization |
-| `report_tasks`             | `bool`   | `true`                                                | Whether to enable task reporting to Coder UI via AgentAPI                                                                      |
-| `cli_app`                  | `bool`   | `false`                                               | Whether to create a CLI app for Amazon Q                                                                                       |
-| `web_app_display_name`     | `string` | `"AmazonQ"`                                           | Display name for the web app                                                                                                   |
-| `cli_app_display_name`     | `string` | `"AmazonQ CLI"`                                       | Display name for the CLI app                                                                                                   |
-| `workdir`                  | `string` | **Required**                                          | The folder to run Amazon Q in                                                                                                  |
-| `agentapi_chat_based_path` | `bool`   | `false`                                               | Whether to use chat-based path for AgentAPI. Required if CODER_WILDCARD_ACCESS_URL is not defined in coder deployment          |
-
-### UI Configuration
-
-| Variable | Type     | Default                | Description                                 |
-| -------- | -------- | ---------------------- | ------------------------------------------- |
-| `order`  | `number` | `null`                 | Position in UI (lower numbers appear first) |
-| `group`  | `string` | `null`                 | Group name for organizing apps              |
-| `icon`   | `string` | `"/icon/amazon-q.svg"` | Icon to display in UI                       |
-
 ### Default System Prompt
 
 The module includes a simple system prompt that instructs Amazon Q:
@@ -249,25 +165,6 @@ Task summaries MUST:
 - Include clear and actionable steps for the user
 - Be less than 160 characters in length
 ```
-
-### Coder MCP Instructions Features:
-
-- **Mandatory Reporting:** Ensures all tasks are reported to Coder via the `@coder` tool
-- **Immediate Response:** Status reporting triggered by any user message
-- **Granular Progress:** Step-by-step reporting for multi-step investigations
-- **State Management:** Clear working, complete, and failure states
-- **Actionable Summaries:** Concise 160-character task descriptions
-- **User Input Handling:** Clear guidelines for when user input is needed
-- **Separation of Concerns:** Separate from system prompt for focused MCP behavior
-
-### Integration with @coder Tool:
-
-The `coder_mcp_instructions` work in conjunction with the `@coder` tool in the agent configuration:
-
-- **Tool Permission:** The `@coder` tool must be in `allowedTools` for MCP integration to work
-- **Task Reporting:** Instructions guide the agent on how to use `coder_report_task`
-- **Status Updates:** Defines the format and timing of status updates to Coder
-- **Error Handling:** Specifies when to report failure states and request user input
 
 You can customize these instructions by providing your own via the `coder_mcp_instructions` variable.
 
@@ -311,15 +208,6 @@ The module includes a default agent configuration template that provides a compr
 - **MCP Servers:** Empty by default, can be configured via `agent_config` variable
 - **System Prompt:** Dynamically populated from the `system_prompt` variable
 - **Legacy MCP:** Uses legacy MCP JSON format for compatibility
-
-### Key Features:
-
-- **Essential Tool Access:** File reading and Coder integration enabled by default
-- **Security Focus:** Limited tool permissions by default, expandable as needed
-- **Coder Integration:** Built-in support for Coder workspace integration via `@coder` tool
-- **Task Reporting:** Enables automatic task progress reporting to Coder through MCP
-- **Knowledge Base:** Access to workspace documentation and rules
-- **Customizable:** Override via `agent_config` variable for specific requirements
 
 You can override this configuration by providing your own JSON via the `agent_config` variable.
 
@@ -495,33 +383,6 @@ module "amazon-q" {
    - `q-aarch64-linux.zip` for ARM systems
 4. Configure network access from Coder workspaces to your internal repository
 
-## Architecture
-
-### Components
-
-1. **AgentAPI Module**: Provides web and CLI app integration
-2. **Install Script**: Handles Amazon Q CLI installation and configuration
-3. **Start Script**: Manages Amazon Q startup with proper environment
-4. **MCP Integration**: Enables task reporting back to Coder
-5. **Agent Configuration**: Customizable AI agent behavior
-
-### Installation Process
-
-1. **Pre-install**: Execute custom pre-install script (if provided)
-2. **Download**: Fetch Amazon Q CLI for the appropriate architecture
-3. **Install**: Install Amazon Q CLI to `~/.local/bin/q`
-4. **Authenticate**: Extract and apply authentication tarball
-5. **Configure**: Set up MCP integration and agent configuration
-6. **Post-install**: Execute custom post-install script (if provided)
-
-### Runtime Behavior
-
-- Amazon Q runs in the specified working directory
-- MCP integration reports task progress to Coder
-- AgentAPI provides web interface integration
-- All tools are trusted by default (configurable)
-- Initial AI prompt is sent if provided
-
 ## Troubleshooting
 
 ### Common Issues
@@ -562,15 +423,3 @@ export VERBOSE=1
 - **Tool Trust**: By default, all tools are trusted - review for security requirements
 - **Pre/Post Scripts**: Custom scripts run with user permissions - validate content
 - **Network Access**: Amazon Q requires internet access for AI model communication
-
-## Contributing
-
-For issues, feature requests, or contributions, please visit the [module repository](https://github.com/coder/registry).
-
-## License
-
-This module is provided under the same license as the Coder registry.
-
----
-
-**Note**: This module requires Coder v2.7+ and is designed to work with the AgentAPI integration system.
