@@ -4,7 +4,7 @@ terraform {
   required_providers {
     coder = {
       source  = "coder/coder"
-      version = ">= 0.23"
+      version = ">= 2.13"
     }
   }
 }
@@ -45,10 +45,13 @@ locals {
   })
 }
 
-resource "coder_script" "github_upload_public_key" {
-  agent_id     = var.agent_id
-  script       = local.script
-  display_name = "Github Upload Public Key"
-  icon         = "/icon/github.svg"
-  run_on_start = true
+module "coder_utils" {
+  source  = "registry.coder.com/coder/coder-utils/coder"
+  version = "0.0.1"
+
+  agent_id            = var.agent_id
+  module_directory    = "$HOME/.coder-modules/coder/github-upload-public-key"
+  display_name_prefix = "GitHub Upload Public Key"
+  icon                = "/icon/github.svg"
+  install_script      = local.script
 }
